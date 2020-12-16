@@ -18,9 +18,11 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edtCadastroNome"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/digite_nome" />
+            android:hint="@string/digite_nome"
+            android:inputType="text" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -35,9 +37,11 @@
         app:layout_constraintTop_toBottomOf="@+id/textInputLayout2">
 
         <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edtCadastroEmail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/Digite_email" />
+            android:hint="@string/Digite_email"
+            android:inputType="textEmailAddress" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -52,31 +56,36 @@
         app:layout_constraintTop_toBottomOf="@+id/textInputLayout4">
 
         <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edtCadastroSenha"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/digite_senha" />
+            android:hint="@string/digite_senha"
+            android:inputType="textPassword" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <Button
         android:id="@+id/button"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="24dp"
+        android:layout_marginEnd="16dp"
         android:background="@color/btnCadastrar"
+        android:onClick="validarCadastroUsuario"
         android:text="@string/btnCadastrar"
         android:textColor="#FFFFFF"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.501"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/switch1" />
+        app:layout_constraintTop_toBottomOf="@+id/switchTipoUsuario" />
 
     <TextView
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/txtPassageiro"
-        app:layout_constraintBottom_toBottomOf="@+id/switch1"
-        app:layout_constraintEnd_toStartOf="@+id/switch1"
+        app:layout_constraintBottom_toBottomOf="@+id/switchTipoUsuario"
+        app:layout_constraintEnd_toStartOf="@+id/switchTipoUsuario"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintHorizontal_chainStyle="spread"
         app:layout_constraintStart_toStartOf="parent" />
@@ -86,13 +95,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/txtMotorista"
-        app:layout_constraintBottom_toBottomOf="@+id/switch1"
+        app:layout_constraintBottom_toBottomOf="@+id/switchTipoUsuario"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/switch1" />
+        app:layout_constraintStart_toEndOf="@+id/switchTipoUsuario" />
 
     <Switch
-        android:id="@+id/switch1"
+        android:id="@+id/switchTipoUsuario"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
