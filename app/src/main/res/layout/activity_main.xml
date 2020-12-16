@@ -27,6 +27,7 @@
             android:layout_margin="7dp"
             android:layout_weight="1"
             android:background="@color/btnEntrar"
+            android:onClick="abrirTelaLogin"
             android:text="Entrar" />
 
         <Button
@@ -36,6 +37,7 @@
             android:layout_margin="7dp"
             android:layout_weight="1"
             android:background="@color/btnCadastrar"
+            android:onClick="abrirTelaCadastro"
             android:text="Cadastrar"
             android:textColor="@color/white" />
     </LinearLayout>
