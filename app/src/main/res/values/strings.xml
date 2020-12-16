@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">Uber_Android_firebase</string>
     <string name="title_activity_maps">Map</string>
+    <string name="entrar">Entrar</string>
+    <string name="cadastrar">Cadastrar</string>
+    <string name="todo">TODO</string>
+    <string name="button">Button</string>
 </resources>
