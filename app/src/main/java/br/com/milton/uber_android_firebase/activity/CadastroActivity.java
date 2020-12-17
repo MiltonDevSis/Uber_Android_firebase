@@ -90,7 +90,7 @@ public class CadastroActivity extends AppCompatActivity {
                     // senão chama a activity requisiçoes
 
                     if (verificaTipoUsuario().equals("P")) {
-                        startActivity(new Intent(CadastroActivity.this, MapsActivity.class));
+                        startActivity(new Intent(CadastroActivity.this, PassageiroActivity.class));
                         finish();
 
                         Toast.makeText(CadastroActivity.this, "Sucesso ao cadastrar Passageiro", Toast.LENGTH_LONG).show();

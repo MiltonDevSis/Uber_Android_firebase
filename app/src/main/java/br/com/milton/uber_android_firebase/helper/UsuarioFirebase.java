@@ -6,8 +6,6 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
@@ -16,7 +14,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 
-import br.com.milton.uber_android_firebase.activity.MapsActivity;
+import br.com.milton.uber_android_firebase.activity.PassageiroActivity;
 import br.com.milton.uber_android_firebase.activity.RequisicoesActivity;
 import br.com.milton.uber_android_firebase.config.ConfiguracaoFirebase;
 import br.com.milton.uber_android_firebase.model.Usuario;
@@ -69,7 +67,7 @@ public class UsuarioFirebase {
                         activity.startActivity( new Intent(activity, RequisicoesActivity.class));
 
                     }else {
-                        activity.startActivity( new Intent(activity, MapsActivity.class));
+                        activity.startActivity( new Intent(activity, PassageiroActivity.class));
                     }
                 }
 
