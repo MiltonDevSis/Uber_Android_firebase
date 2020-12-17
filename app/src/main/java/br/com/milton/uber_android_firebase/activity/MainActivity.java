@@ -9,6 +9,8 @@ import android.view.View;
 import java.util.Objects;
 
 import br.com.milton.uber_android_firebase.R;
+import br.com.milton.uber_android_firebase.helper.UsuarioFirebase;
+import br.com.milton.uber_android_firebase.model.Usuario;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -27,5 +29,11 @@ public class MainActivity extends AppCompatActivity {
 
     public void abrirTelaCadastro(View view){
         startActivity( new Intent(this, CadastroActivity.class));
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        UsuarioFirebase.redirecionaUsuarioLogado( MainActivity.this );
     }
 }
