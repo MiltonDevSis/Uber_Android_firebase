@@ -37,7 +37,10 @@ import java.util.Locale;
 
 import br.com.milton.uber_android_firebase.R;
 import br.com.milton.uber_android_firebase.config.ConfiguracaoFirebase;
+import br.com.milton.uber_android_firebase.helper.UsuarioFirebase;
 import br.com.milton.uber_android_firebase.model.Destino;
+import br.com.milton.uber_android_firebase.model.Requisicao;
+import br.com.milton.uber_android_firebase.model.Usuario;
 
 public class PassageiroActivity extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -46,6 +49,8 @@ public class PassageiroActivity extends AppCompatActivity implements OnMapReadyC
     private FirebaseAuth autenticacao;
     private LocationManager locationManager;
     private LocationListener locationListener;
+
+    private LatLng localPassageiro;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,14 +76,24 @@ public class PassageiroActivity extends AppCompatActivity implements OnMapReadyC
             Address addressDestino = recuperarEndereco( enderecoDestino );
             if ( addressDestino != null ){
 
+                // ORDEM SEGUIDA NAS AULAS
                 Destino destino = new Destino();
+                destino.setCidade(addressDestino.getAdminArea());
+                destino.setCep( addressDestino.getPostalCode() );
+                destino.setBairro( addressDestino.getSubLocality() );
+                destino.setRua( addressDestino.getThoroughfare() );
+                destino.setNumero( addressDestino.getFeatureName() );
+                destino.setLatitude( String.valueOf(addressDestino.getLatitude()) );
+                destino.setLongitude( String.valueOf(addressDestino.getLongitude()) );
+/*
+                // MINHA ORDEM
                 destino.setCidade(addressDestino.getSubAdminArea());
-                destino.setCep(addressDestino.getPostalCode());
-                destino.setBairro(addressDestino.getSubLocality());
-                destino.setRua(addressDestino.getFeatureName());
-                destino.setNumero(addressDestino.getThoroughfare());
-                destino.setLatitude(String.valueOf(addressDestino.getLatitude()));
-                destino.setLongitude(String.valueOf(addressDestino.getLongitude()));
+                destino.setCep( addressDestino.getPostalCode() );
+                destino.setBairro( addressDestino.getSubLocality() );
+                destino.setRua( addressDestino.getFeatureName() );
+                destino.setNumero( addressDestino.getThoroughfare() );
+                destino.setLatitude( String.valueOf(addressDestino.getLatitude()) );
+                destino.setLongitude( String.valueOf(addressDestino.getLongitude()) );*/
 
                 StringBuilder mensagem = new StringBuilder();
                 mensagem.append("Cidade: " + destino.getCidade());
@@ -92,7 +107,8 @@ public class PassageiroActivity extends AppCompatActivity implements OnMapReadyC
                 builder.setMessage( mensagem );
                 builder.setPositiveButton("Confirmar", (dialogInterface, i) -> {
 
-                    // salvar requisição
+                // salvar requisição
+                salvarRequisicao( destino );
 
                 }).setNegativeButton("Cancelar", (dialogInterface, i) -> {
 
@@ -106,20 +122,40 @@ public class PassageiroActivity extends AppCompatActivity implements OnMapReadyC
         }
     }
 
+    private void salvarRequisicao(Destino destino){
+
+        Requisicao requisicao = new Requisicao();
+        requisicao.setDestino( destino );
+
+        Usuario usuarioPassageiro = UsuarioFirebase.getDadosUsuarioLogado();
+        usuarioPassageiro.setLatitude( String.valueOf(localPassageiro.latitude) );
+        usuarioPassageiro.setLongitude(String.valueOf(localPassageiro.longitude));
+        requisicao.setPassageiro( usuarioPassageiro );
+
+        requisicao.setStatus( Requisicao.STATUS_AGUARDANDO );
+
+        requisicao.salvar();
+
+    }
+
     private Address recuperarEndereco(String endereco){
 
         Geocoder geocoder = new Geocoder(this, Locale.getDefault());
         try {
-            List<Address> listaEnderecos = geocoder.getFromLocationName( endereco, 1 );
-            if (listaEnderecos != null && listaEnderecos.size() > 0){
+            List<Address> listaEnderecos = geocoder.getFromLocationName(endereco, 1);
+            if( listaEnderecos != null && listaEnderecos.size() > 0 ){
                 Address address = listaEnderecos.get(0);
 
                 return address;
+
             }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         return null;
+
     }
 
     private void recuperarLocalizacaoUsuario() {
@@ -130,14 +166,14 @@ public class PassageiroActivity extends AppCompatActivity implements OnMapReadyC
             @Override
             public void onLocationChanged(@NonNull Location location) {
 
-                double latitude = -23;
-                double longitude = -49;
+                double latitude = location.getLatitude();
+                double longitude = location.getLongitude();
 
-                LatLng meuLocal = new LatLng(latitude, longitude);
+                localPassageiro = new LatLng(latitude, longitude);
 
                 mMap.clear(); // limpa o mapa e mostra um unico marcador
-                mMap.addMarker(new MarkerOptions().position(meuLocal).title("Meu Local").icon(BitmapDescriptorFactory.fromResource(R.drawable.usuario)));
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(meuLocal, 20));
+                mMap.addMarker(new MarkerOptions().position(localPassageiro).title("Meu Local").icon(BitmapDescriptorFactory.fromResource(R.drawable.usuario)));
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(localPassageiro, 15));
 
             }
             @Override
