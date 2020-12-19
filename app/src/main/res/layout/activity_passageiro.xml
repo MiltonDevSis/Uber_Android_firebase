@@ -68,10 +68,11 @@
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:layout_gravity="bottom"
-        android:text="Chamar Uber"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
         android:layout_marginBottom="5dp"
-        android:theme="@style/botaoPadrao"/>
+        android:onClick="chamarUber"
+        android:text="Chamar Uber"
+        android:theme="@style/botaoPadrao" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -2,11 +2,25 @@ package br.com.milton.uber_android_firebase.activity;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -15,25 +29,20 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
-
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
 
 import br.com.milton.uber_android_firebase.R;
 import br.com.milton.uber_android_firebase.config.ConfiguracaoFirebase;
+import br.com.milton.uber_android_firebase.model.Destino;
 
 public class PassageiroActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    private EditText edtDestino;
     private FirebaseAuth autenticacao;
     private LocationManager locationManager;
     private LocationListener locationListener;
@@ -42,18 +51,8 @@ public class PassageiroActivity extends AppCompatActivity implements OnMapReadyC
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_passageiro);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        toolbar.setTitle("Inciar uma viagem");
-        setSupportActionBar(toolbar);
 
-        // Configurações inicaiais
-        autenticacao = ConfiguracaoFirebase.getFirebaseAutenticacao();
-
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
-
+        inicializarComponentes();
     }
 
     @Override
@@ -61,24 +60,95 @@ public class PassageiroActivity extends AppCompatActivity implements OnMapReadyC
         mMap = googleMap;
 
         recuperarLocalizacaoUsuario();
+    }
 
+    public void chamarUber( View view ){
+
+        String enderecoDestino = edtDestino.getText().toString();
+
+        if ( !enderecoDestino.equals("") || enderecoDestino != null ){
+
+            Address addressDestino = recuperarEndereco( enderecoDestino );
+            if ( addressDestino != null ){
+
+                Destino destino = new Destino();
+                destino.setCidade(addressDestino.getSubAdminArea());
+                destino.setCep(addressDestino.getPostalCode());
+                destino.setBairro(addressDestino.getSubLocality());
+                destino.setRua(addressDestino.getFeatureName());
+                destino.setNumero(addressDestino.getThoroughfare());
+                destino.setLatitude(String.valueOf(addressDestino.getLatitude()));
+                destino.setLongitude(String.valueOf(addressDestino.getLongitude()));
+
+                StringBuilder mensagem = new StringBuilder();
+                mensagem.append("Cidade: " + destino.getCidade());
+                mensagem.append("\nRua: " + destino.getRua());
+                mensagem.append("\nBairro: " + destino.getBairro());
+                mensagem.append("\nNúmero: " + destino.getNumero());
+                mensagem.append("\nCep: " + destino.getCep());
+
+                AlertDialog.Builder builder = new AlertDialog.Builder( this );
+                builder.setTitle("Confirme seu endereço");
+                builder.setMessage( mensagem );
+                builder.setPositiveButton("Confirmar", (dialogInterface, i) -> {
+
+                    // salvar requisição
+
+                }).setNegativeButton("Cancelar", (dialogInterface, i) -> {
+
+                });
+                AlertDialog dialog = builder.create();
+                dialog.show();
+            }
+
+        }else{
+            Toast.makeText(this, "Informe o endereço de destino", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private Address recuperarEndereco(String endereco){
+
+        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+        try {
+            List<Address> listaEnderecos = geocoder.getFromLocationName( endereco, 1 );
+            if (listaEnderecos != null && listaEnderecos.size() > 0){
+                Address address = listaEnderecos.get(0);
+
+                return address;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     private void recuperarLocalizacaoUsuario() {
 
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
-        locationListener = location -> {
+        locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(@NonNull Location location) {
 
-            double latitude = location.getLatitude();
-            double longitude = location.getLongitude();
+                double latitude = -23;
+                double longitude = -49;
 
-            LatLng meuLocal = new LatLng(-46.6, -23.5);
+                LatLng meuLocal = new LatLng(latitude, longitude);
 
-            mMap.clear(); // limpa o mapa e mostra um unico marcador
-            mMap.addMarker(new MarkerOptions().position(meuLocal).title("Meu Local").icon(BitmapDescriptorFactory.fromResource(R.drawable.usuario)));
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(meuLocal, 20));
+                mMap.clear(); // limpa o mapa e mostra um unico marcador
+                mMap.addMarker(new MarkerOptions().position(meuLocal).title("Meu Local").icon(BitmapDescriptorFactory.fromResource(R.drawable.usuario)));
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(meuLocal, 20));
 
+            }
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+            }
+            @Override
+            public void onProviderEnabled(@NonNull String provider) {
+            }
+            @Override
+            public void onProviderDisabled(@NonNull String provider) {
+            }
         };
 
         // solicita atualizacao de localizacao
@@ -106,5 +176,21 @@ public class PassageiroActivity extends AppCompatActivity implements OnMapReadyC
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void inicializarComponentes(){
+
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar.setTitle("Inciar uma viagem");
+        setSupportActionBar(toolbar);
+
+        edtDestino = findViewById(R.id.edtDestino);
+
+        // Configurações inicaiais
+        autenticacao = ConfiguracaoFirebase.getFirebaseAutenticacao();
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
     }
 }
