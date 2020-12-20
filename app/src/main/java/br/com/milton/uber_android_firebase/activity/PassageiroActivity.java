@@ -71,8 +71,6 @@ public class PassageiroActivity extends AppCompatActivity implements OnMapReadyC
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_passageiro);
 
-        firebaseRef = ConfiguracaoFirebase.getFirebaseDatabase();
-
         inicializarComponentes();
 
         verificaStatusRequisicao();
@@ -103,15 +101,19 @@ public class PassageiroActivity extends AppCompatActivity implements OnMapReadyC
                }
 
                 Collections.reverse( lista );
-                requisicao = lista.get(0);
 
-                switch (requisicao.getStatus()){
-                    case Requisicao.STATUS_AGUARDANDO :
-                        linearLayoutDestino.setVisibility(View.GONE);
-                        btnChamarUber.setText("Cancelar Uber");
-                        uberChamado = true;
-                        break;
-                }
+               if (lista != null && lista.size() > 0) {
+
+                   requisicao = lista.get(0);
+
+                   switch (requisicao.getStatus()) {
+                       case Requisicao.STATUS_AGUARDANDO:
+                           linearLayoutDestino.setVisibility(View.GONE);
+                           btnChamarUber.setText("Cancelar Uber");
+                           uberChamado = true;
+                           break;
+                   }
+               }
             }
 
             @Override
@@ -282,6 +284,8 @@ public class PassageiroActivity extends AppCompatActivity implements OnMapReadyC
 
         // Configurações inicaiais
         autenticacao = ConfiguracaoFirebase.getFirebaseAutenticacao();
+
+        firebaseRef = ConfiguracaoFirebase.getFirebaseDatabase();
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
