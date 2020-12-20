@@ -2,7 +2,6 @@ package br.com.milton.uber_android_firebase.activity;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
@@ -10,10 +9,13 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -30,8 +32,15 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -49,6 +58,11 @@ public class PassageiroActivity extends AppCompatActivity implements OnMapReadyC
     private FirebaseAuth autenticacao;
     private LocationManager locationManager;
     private LocationListener locationListener;
+    private Button btnChamarUber;
+    private LinearLayout linearLayoutDestino;
+    private boolean uberChamado = false;
+    private DatabaseReference firebaseRef;
+    private Requisicao requisicao;
 
     private LatLng localPassageiro;
 
@@ -57,7 +71,11 @@ public class PassageiroActivity extends AppCompatActivity implements OnMapReadyC
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_passageiro);
 
+        firebaseRef = ConfiguracaoFirebase.getFirebaseDatabase();
+
         inicializarComponentes();
+
+        verificaStatusRequisicao();
     }
 
     @Override
@@ -67,59 +85,95 @@ public class PassageiroActivity extends AppCompatActivity implements OnMapReadyC
         recuperarLocalizacaoUsuario();
     }
 
-    public void chamarUber( View view ){
+    private void verificaStatusRequisicao(){
 
-        String enderecoDestino = edtDestino.getText().toString();
+        Usuario usuarioLogado = UsuarioFirebase.getDadosUsuarioLogado();
+        DatabaseReference requisicoes = firebaseRef.child("requisicoes");
+        Query requisicaoPesquisa = requisicoes.orderByChild("passageiro/id").equalTo( usuarioLogado.getId() );
 
-        if ( !enderecoDestino.equals("") || enderecoDestino != null ){
+        requisicaoPesquisa.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
 
-            Address addressDestino = recuperarEndereco( enderecoDestino );
-            if ( addressDestino != null ){
+                List<Requisicao> lista = new ArrayList<>();
 
-                // ORDEM SEGUIDA NAS AULAS
-                Destino destino = new Destino();
-                destino.setCidade(addressDestino.getAdminArea());
-                destino.setCep( addressDestino.getPostalCode() );
-                destino.setBairro( addressDestino.getSubLocality() );
-                destino.setRua( addressDestino.getThoroughfare() );
-                destino.setNumero( addressDestino.getFeatureName() );
-                destino.setLatitude( String.valueOf(addressDestino.getLatitude()) );
-                destino.setLongitude( String.valueOf(addressDestino.getLongitude()) );
-/*
-                // MINHA ORDEM
-                destino.setCidade(addressDestino.getSubAdminArea());
-                destino.setCep( addressDestino.getPostalCode() );
-                destino.setBairro( addressDestino.getSubLocality() );
-                destino.setRua( addressDestino.getFeatureName() );
-                destino.setNumero( addressDestino.getThoroughfare() );
-                destino.setLatitude( String.valueOf(addressDestino.getLatitude()) );
-                destino.setLongitude( String.valueOf(addressDestino.getLongitude()) );*/
+               for (DataSnapshot ds: snapshot.getChildren()){
+                    lista.add( ds.getValue( Requisicao.class ) );
 
-                StringBuilder mensagem = new StringBuilder();
-                mensagem.append("Cidade: " + destino.getCidade());
-                mensagem.append("\nRua: " + destino.getRua());
-                mensagem.append("\nBairro: " + destino.getBairro());
-                mensagem.append("\nNúmero: " + destino.getNumero());
-                mensagem.append("\nCep: " + destino.getCep());
+               }
 
-                AlertDialog.Builder builder = new AlertDialog.Builder( this );
-                builder.setTitle("Confirme seu endereço");
-                builder.setMessage( mensagem );
-                builder.setPositiveButton("Confirmar", (dialogInterface, i) -> {
+                Collections.reverse( lista );
+                requisicao = lista.get(0);
 
-                // salvar requisição
-                salvarRequisicao( destino );
-
-                }).setNegativeButton("Cancelar", (dialogInterface, i) -> {
-
-                });
-                AlertDialog dialog = builder.create();
-                dialog.show();
+                switch (requisicao.getStatus()){
+                    case Requisicao.STATUS_AGUARDANDO :
+                        linearLayoutDestino.setVisibility(View.GONE);
+                        btnChamarUber.setText("Cancelar Uber");
+                        uberChamado = true;
+                        break;
+                }
             }
 
-        }else{
-            Toast.makeText(this, "Informe o endereço de destino", Toast.LENGTH_LONG).show();
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+    }
+
+    public void chamarUber( View view ){
+
+        if ( !uberChamado ){  // uber não foi chamado
+
+            String enderecoDestino = edtDestino.getText().toString();
+
+            if ( !enderecoDestino.equals("") || enderecoDestino != null ){
+
+                Address addressDestino = recuperarEndereco( enderecoDestino );
+                if ( addressDestino != null ){
+
+                    Destino destino = new Destino();
+                    destino.setCidade(addressDestino.getSubAdminArea());
+                    destino.setCep( addressDestino.getPostalCode() );
+                    destino.setBairro( addressDestino.getSubLocality() );
+                    destino.setRua( addressDestino.getThoroughfare() );
+                    destino.setNumero( addressDestino.getFeatureName() );
+                    destino.setLatitude( String.valueOf(addressDestino.getLatitude()) );
+                    destino.setLongitude( String.valueOf(addressDestino.getLongitude()) );
+
+                    StringBuilder mensagem = new StringBuilder();
+                    mensagem.append("Cidade: " + destino.getCidade());
+                    mensagem.append("\nRua: " + destino.getRua());
+                    mensagem.append("\nBairro: " + destino.getBairro());
+                    mensagem.append("\nNúmero: " + destino.getNumero());
+                    mensagem.append("\nCep: " + destino.getCep());
+
+                    AlertDialog.Builder builder = new AlertDialog.Builder( this );
+                    builder.setTitle("Confirme seu endereço");
+                    builder.setMessage( mensagem );
+                    builder.setPositiveButton("Confirmar", (dialogInterface, i) -> {
+
+                        // salvar requisição
+                        salvarRequisicao( destino );
+                        uberChamado = true;
+
+                    }).setNegativeButton("Cancelar", (dialogInterface, i) -> {
+
+                    });
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+                }
+            }else{
+                Toast.makeText(this, "Informe o endereço de destino", Toast.LENGTH_LONG).show();
+            }
+        }else{  // cancelar a requisição
+
+            uberChamado = false;
+
         }
+
+
     }
 
     private void salvarRequisicao(Destino destino){
@@ -133,8 +187,10 @@ public class PassageiroActivity extends AppCompatActivity implements OnMapReadyC
         requisicao.setPassageiro( usuarioPassageiro );
 
         requisicao.setStatus( Requisicao.STATUS_AGUARDANDO );
-
         requisicao.salvar();
+
+        linearLayoutDestino.setVisibility( View.GONE );
+        btnChamarUber.setText("Cancelar Uber");
 
     }
 
@@ -221,6 +277,8 @@ public class PassageiroActivity extends AppCompatActivity implements OnMapReadyC
         setSupportActionBar(toolbar);
 
         edtDestino = findViewById(R.id.edtDestino);
+        linearLayoutDestino = findViewById(R.id.LinearLayoutDestino);
+        btnChamarUber = findViewById(R.id.btnChamarUber);
 
         // Configurações inicaiais
         autenticacao = ConfiguracaoFirebase.getFirebaseAutenticacao();
