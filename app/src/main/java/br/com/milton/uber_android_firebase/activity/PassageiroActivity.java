@@ -172,10 +172,7 @@ public class PassageiroActivity extends AppCompatActivity implements OnMapReadyC
         }else{  // cancelar a requisição
 
             uberChamado = false;
-
         }
-
-
     }
 
     private void salvarRequisicao(Destino destino){
@@ -205,15 +202,11 @@ public class PassageiroActivity extends AppCompatActivity implements OnMapReadyC
                 Address address = listaEnderecos.get(0);
 
                 return address;
-
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         return null;
-
     }
 
     private void recuperarLocalizacaoUsuario() {

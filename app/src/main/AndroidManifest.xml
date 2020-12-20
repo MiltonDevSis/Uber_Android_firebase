@@ -13,9 +13,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Uber_Android_firebase">
         <activity
+            android:name=".activity.CorridaActivity"
+            android:label="@string/title_activity_corrida"
+            android:theme="@style/Theme.Uber_Android_firebase.NoActionBar"></activity>
+        <activity
             android:name=".activity.PassageiroActivity"
             android:label="@string/title_activity_passageiro"
-            android:theme="@style/Theme.Uber_Android_firebase.NoActionBar"></activity>
+            android:theme="@style/Theme.Uber_Android_firebase.NoActionBar" />
         <activity android:name=".activity.RequisicoesActivity" />
         <activity
             android:name=".activity.CadastroActivity"

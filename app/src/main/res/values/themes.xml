@@ -15,7 +15,7 @@
 
     </style>
 
-    <style name="botaoPadrao" parent="Theme.AppCompat.Light" >
+    <style name="botaoPadrao" parent="Theme.AppCompat.Light">
         <item name="colorControlHighlight">@color/purple_500</item>
         <item name="colorButtonNormal">@color/purple_700</item>
         <item name="android:textColor">@android:color/white</item>
