@@ -2,6 +2,7 @@ package br.com.milton.uber_android_firebase.activity;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
@@ -22,14 +23,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 import br.com.milton.uber_android_firebase.R;
+import br.com.milton.uber_android_firebase.adapter.RequisicoesAdapter;
 import br.com.milton.uber_android_firebase.config.ConfiguracaoFirebase;
+import br.com.milton.uber_android_firebase.helper.UsuarioFirebase;
 import br.com.milton.uber_android_firebase.model.Requisicao;
+import br.com.milton.uber_android_firebase.model.Usuario;
 
 public class RequisicoesActivity extends AppCompatActivity {
 
     private FirebaseAuth autenticacao;
     private DatabaseReference firebaseRef;
     private List<Requisicao> listaRequisicoes = new ArrayList<>();
+    private RequisicoesAdapter adapter;
+    private Usuario motorista;
 
     private RecyclerView recyclerRequisicoes;
     private TextView txtResultado;
@@ -70,8 +76,16 @@ public class RequisicoesActivity extends AppCompatActivity {
         txtResultado = findViewById(R.id.txtResultado);
 
         // Configurações inicaiais
+        motorista = UsuarioFirebase.getDadosUsuarioLogado();
         autenticacao = ConfiguracaoFirebase.getFirebaseAutenticacao();
         firebaseRef = ConfiguracaoFirebase.getFirebaseDatabase();
+
+        // configurar recyclerView
+        adapter = new RequisicoesAdapter( listaRequisicoes, getApplicationContext(), motorista );
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager( getApplicationContext() );
+        recyclerRequisicoes.setLayoutManager( layoutManager );
+        recyclerRequisicoes.setHasFixedSize( true );
+        recyclerRequisicoes.setAdapter( adapter );
 
         recuperarRequisicoes();
     }
@@ -102,6 +116,8 @@ public class RequisicoesActivity extends AppCompatActivity {
 
                     listaRequisicoes.add( requisicao );
                 }
+
+                adapter.notifyDataSetChanged();
             }
 
             @Override
