@@ -21,6 +21,8 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -38,11 +40,15 @@ public class CorridaActivity extends AppCompatActivity implements OnMapReadyCall
     private LocationManager locationManager;
     private LocationListener locationListener;
     private LatLng localMotorista;
+    private LatLng localPassageiro;
     private Usuario motorista;
+    private Usuario passageiro;
     private String idRequisicao;
     private Requisicao requisicao;
     private DatabaseReference firebaseRef;
     private Button btnAceitarCorrida;
+    private Marker marcadorMotorista;
+    private Marker marcadorPassageiro;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +73,14 @@ public class CorridaActivity extends AppCompatActivity implements OnMapReadyCall
         requisicoes.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+
+                // recupera requisicao
                 requisicao = snapshot.getValue(Requisicao.class);
+                passageiro = requisicao.getPassageiro();
+                localPassageiro = new LatLng(
+                        Double.parseDouble(passageiro.getLatitude()),
+                        Double.parseDouble(passageiro.getLongitude())
+                );
 
                 switch (requisicao.getStatus()){
                     case Requisicao.STATUS_AGUARDANDO:
@@ -93,6 +106,54 @@ public class CorridaActivity extends AppCompatActivity implements OnMapReadyCall
     private void requisicaoACaminho(){
 
         btnAceitarCorrida.setText("A caminho do passageiro");
+
+        //exibe marcador motorista
+        adicionaMarcadorMotorista(localMotorista, motorista.getNome());
+
+
+        // exibe marcador passageiro
+        adicionaMarcadorPassageiro(localPassageiro, passageiro.getNome());
+
+        //centralizar dois marcadores
+        centralizarDoisMarcadores(marcadorMotorista, marcadorPassageiro);
+
+    }
+        // caso tenha mais de um marcador usar uma lista
+    private void centralizarDoisMarcadores(Marker marcador1, Marker marcador2){
+
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+
+        builder.include( marcador1.getPosition() ); // para mais marcadores eliminar essas duas linhas
+        builder.include( marcador2.getPosition() ); // e percorrer com um for. pois os bounds pega as extremidades dos marcadores
+
+        LatLngBounds bounds = builder.build();
+
+        int largura = getResources().getDisplayMetrics().widthPixels;
+        int altura = getResources().getDisplayMetrics().heightPixels;
+        int espacoInterno = (int) ( largura * 0.20);
+
+
+        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, largura, altura, espacoInterno ));
+
+    }
+
+    private  void adicionaMarcadorMotorista(LatLng localizacao, String titulo){
+
+        if (marcadorMotorista != null)
+            marcadorMotorista.remove();
+
+        marcadorMotorista = mMap.addMarker(new MarkerOptions().position(localizacao)
+                .title(titulo).icon(BitmapDescriptorFactory.fromResource(R.drawable.carro)));
+
+    }
+
+    private  void adicionaMarcadorPassageiro(LatLng localizacao, String titulo){
+
+        if (marcadorPassageiro != null)
+            marcadorPassageiro.remove();
+
+        marcadorPassageiro = mMap.addMarker(new MarkerOptions().position(localizacao)
+                .title(titulo).icon(BitmapDescriptorFactory.fromResource(R.drawable.usuario)));
 
     }
 
