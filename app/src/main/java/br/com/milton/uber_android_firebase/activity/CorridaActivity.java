@@ -2,6 +2,7 @@ package br.com.milton.uber_android_firebase.activity;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -9,6 +10,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -49,6 +51,8 @@ public class CorridaActivity extends AppCompatActivity implements OnMapReadyCall
     private Button btnAceitarCorrida;
     private Marker marcadorMotorista;
     private Marker marcadorPassageiro;
+    private String statusRequisicao;
+    private boolean requisicaoAtiva;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,7 +65,9 @@ public class CorridaActivity extends AppCompatActivity implements OnMapReadyCall
         if (getIntent().getExtras().containsKey("idRequisicao") && getIntent().getExtras().containsKey("motorista")) {
             Bundle extra = getIntent().getExtras();
             motorista = (Usuario) extra.getSerializable("motorista");
+            localMotorista = new LatLng(Double.parseDouble(motorista.getLatitude()), Double.parseDouble(motorista.getLatitude()));
             idRequisicao = extra.getString("idRequisicao");
+            requisicaoAtiva = extra.getBoolean("RequisicaoAtiva");
             verificaStatusRequisicao();
         }
 
@@ -76,19 +82,15 @@ public class CorridaActivity extends AppCompatActivity implements OnMapReadyCall
 
                 // recupera requisicao
                 requisicao = snapshot.getValue(Requisicao.class);
-                passageiro = requisicao.getPassageiro();
-                localPassageiro = new LatLng(
-                        Double.parseDouble(passageiro.getLatitude()),
-                        Double.parseDouble(passageiro.getLongitude())
-                );
 
-                switch (requisicao.getStatus()){
-                    case Requisicao.STATUS_AGUARDANDO:
-                            requisicaoAguardando();
-                        break;
-                    case Requisicao.STATUS_A_CAMINHO:
-                        requisicaoACaminho();
-                        break;
+                if (requisicao != null) {
+                    passageiro = requisicao.getPassageiro();
+                    localPassageiro = new LatLng(
+                            Double.parseDouble(passageiro.getLatitude()),
+                            Double.parseDouble(passageiro.getLongitude())
+                    );
+                    statusRequisicao = requisicao.getStatus();
+                    alteraInterfaceStatusRequisicao(statusRequisicao);
                 }
             }
 
@@ -97,6 +99,19 @@ public class CorridaActivity extends AppCompatActivity implements OnMapReadyCall
 
             }
         });
+    }
+
+    private void alteraInterfaceStatusRequisicao( String status){
+
+        switch (status){
+            case Requisicao.STATUS_AGUARDANDO:
+                requisicaoAguardando();
+                break;
+            case Requisicao.STATUS_A_CAMINHO:
+                requisicaoACaminho();
+                break;
+        }
+
     }
 
     private void requisicaoAguardando(){
@@ -188,10 +203,7 @@ public class CorridaActivity extends AppCompatActivity implements OnMapReadyCall
                 double longitude = location.getLongitude();
 
                 localMotorista = new LatLng(latitude, longitude);
-
-                mMap.clear(); // limpa o mapa e mostra um unico marcador
-                mMap.addMarker(new MarkerOptions().position(localMotorista).title("Meu Local").icon(BitmapDescriptorFactory.fromResource(R.drawable.carro)));
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(localMotorista, 15));
+                alteraInterfaceStatusRequisicao(statusRequisicao);
 
             }
 
@@ -230,5 +242,18 @@ public class CorridaActivity extends AppCompatActivity implements OnMapReadyCall
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+
+        if (requisicaoAtiva){
+            Toast.makeText(CorridaActivity.this, "Necessário encerrar a requisicão atual!",
+                    Toast.LENGTH_LONG).show();
+        }else{
+            Intent i = new Intent(CorridaActivity.this, RequisicoesActivity.class);
+            startActivity(i);
+        }
+        return false;
     }
 }

@@ -181,8 +181,8 @@ public class PassageiroActivity extends AppCompatActivity implements OnMapReadyC
         requisicao.setDestino( destino );
 
         Usuario usuarioPassageiro = UsuarioFirebase.getDadosUsuarioLogado();
-        usuarioPassageiro.setLatitude( String.valueOf(localPassageiro.latitude) );
-        usuarioPassageiro.setLongitude(String.valueOf(localPassageiro.longitude));
+        usuarioPassageiro.setLatitude( String.valueOf(-27) );
+        usuarioPassageiro.setLongitude(String.valueOf(-48));
         requisicao.setPassageiro( usuarioPassageiro );
 
         requisicao.setStatus( Requisicao.STATUS_AGUARDANDO );
